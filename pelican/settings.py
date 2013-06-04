@@ -104,6 +104,7 @@ DEFAULT_CONFIG = {
     'PLUGINS': [],
     'TEMPLATE_PAGES': {},
     'IGNORE_FILES': ['.#*'],
+    'USE_WITH_HANDLEBARS': False,
     }
 
 def read_settings(path=None, override=None):

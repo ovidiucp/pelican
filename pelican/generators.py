@@ -53,6 +53,22 @@ class Generator(object):
 
         simple_loader = FileSystemLoader(os.path.join(theme_path,
                                          "themes", "simple", "templates"))
+
+        if self.settings['USE_WITH_HANDLEBARS']:
+            block_start_string = '<%'
+            block_end_string = '%>'
+            variable_start_string = '%%'
+            variable_end_string = '%%'
+            comment_start_string = '<#'
+            comment_end_string = '#>'
+        else:
+            block_start_string = '{%'
+            block_end_string = '%}'
+            variable_start_string = '{{'
+            variable_end_string = '}}'
+            comment_start_string = '{#'
+            comment_end_string = '#}'
+
         self.env = Environment(
             trim_blocks=True,
             loader=ChoiceLoader([
@@ -61,6 +77,12 @@ class Generator(object):
                 PrefixLoader({'!simple': simple_loader})  # explicit one
             ]),
             extensions=self.settings['JINJA_EXTENSIONS'],
+            block_start_string=block_start_string,
+            block_end_string=block_end_string,
+            variable_start_string=variable_start_string,
+            variable_end_string=variable_end_string,
+            comment_start_string=comment_start_string,
+            comment_end_string=comment_end_string,
         )
 
         logger.debug('template list: {0}'.format(self.env.list_templates()))
