@@ -318,6 +318,18 @@ def get_instance(args):
     return cls(settings)
 
 
+def directories_from_template_pages(pelican):
+    tmpls = pelican.settings['TEMPLATE_PAGES']
+    dirs = set()
+    extensions = set()
+    for f in tmpls.keys():
+        dirname = os.path.dirname(f)
+        absdir = os.path.abspath(os.path.normpath(os.path.join(
+            pelican.path, dirname)))
+        dirs.add(absdir)
+        extensions.add(os.path.splitext(f)[1])
+    return dirs, extensions
+
 def main():
     args = parse_arguments()
     init(args.verbosity)
@@ -330,6 +342,17 @@ def main():
                                         [''],
                                         pelican.ignore_files),
                 'settings': file_watcher(args.settings)}
+    # Watch for changes of the TEMPLATE_PAGES. Don't include these
+    # inside `watchers`, as they could appear as a subdirectory of the
+    # pelican.path. Since later the filenames are used in a
+    # dictionary, the order in which the file is checked would be
+    # unpredictable.
+    template_watchers = {}
+    if pelican.settings['TEMPLATE_PAGES']:
+        dirs, extensions = directories_from_template_pages(pelican)
+        for d in dirs:
+            template_watchers[d] = folder_watcher(
+                d, extensions, pelican.ignore_files)
 
     try:
         if args.autoreload:
@@ -348,6 +371,8 @@ def main():
                     if modified['settings']:
                         pelican = get_instance(args)
 
+                    should_regenerate = False
+
                     if any(modified.values()):
                         print('\n-> Modified: {}. re-generating...'.format(
                                 ', '.join(k for k, v in modified.items() if v)))
@@ -358,6 +383,16 @@ def main():
                         if modified['theme'] is None:
                             logger.warning('Empty theme folder. Using `basic` theme.')
 
+                        should_regenerate |= True
+
+                    # Check the template watchers
+                    modified = {k: next(v) for k, v in template_watchers.items()}
+                    if any(modified.values()):
+                        print('\n-> Modified: {}. re-generating...'.format(
+                                ', '.join(k for k, v in modified.items() if v)))
+                        should_regenerate |= True
+
+                    if should_regenerate:
                         pelican.run()
 
                 except KeyboardInterrupt:

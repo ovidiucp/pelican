@@ -67,11 +67,11 @@ def strftime(date, date_format):
 
 class DateFormatter(object):
     '''A date formatter object used as a jinja filter
-    
-    Uses the `strftime` implementation and makes sure jinja uses the locale 
+
+    Uses the `strftime` implementation and makes sure jinja uses the locale
     defined in LOCALE setting
     '''
-    
+
     def __init__(self):
         self.locale = locale.setlocale(locale.LC_TIME)
 
